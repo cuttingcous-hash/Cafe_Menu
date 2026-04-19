@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutting & Co. — Home Café</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --amber:#F0A500;--amber-dark:#C47D00;--amber-light:#FDE6A0;
+  --cream:#FBF6EE;--brown:#3B1C08;--brown-mid:#7A3B10;--brown-light:#C9834A;
+  --white:#FFFDF8;--text:#2B1200;--muted:#7A5C3E;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+.hidden{display:none!important;}
+.tag{display:inline-block;padding:0.25rem 0.8rem;border-radius:50px;font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+.tag.open{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;}
+.tag.sold-out{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;}
+.tag.upcoming{background:var(--amber-light);color:var(--brown-mid);border:1px solid rgba(196,125,0,0.3);}
+#mode-bar{background:var(--brown);padding:0.8rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+#mode-bar .logo{font-family:'Playfair Display',serif;color:var(--amber);font-size:1.1rem;font-weight:700;}
+.mode-btns{display:flex;gap:0.5rem;}
+.mode-btn{padding:0.4rem 1.1rem;border-radius:50px;font-size:0.8rem;font-weight:500;cursor:pointer;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.mode-btn.active{background:var(--amber);color:var(--brown);border-color:var(--amber);}
+#owner-panel{padding:2rem;}
+.owner-header{margin-bottom:2rem;}
+.owner-header h1{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--brown);margin-bottom:0.3rem;}
+.owner-header p{color:var(--muted);font-size:0.9rem;}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+.panel-card{background:var(--white);border:1px solid rgba(196,125,0,0.2);border-radius:16px;padding:1.5rem;}
+.panel-card h2{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--brown);margin-bottom:1.2rem;padding-bottom:0.8rem;border-bottom:1px solid rgba(196,125,0,0.15);}
+.panel-card.full{grid-column:span 2;}
+label{display:block;font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:0.3rem;letter-spacing:0.05em;text-transform:uppercase;}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{width:100%;padding:0.6rem 0.9rem;border:1px solid rgba(196,125,0,0.25);border-radius:8px;font-size:0.88rem;color:var(--text);background:var(--cream);font-family:'DM Sans',sans-serif;margin-bottom:0.9rem;outline:none;transition:border 0.2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--amber);}
+textarea{resize:vertical;min-height:70px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+.save-btn{background:var(--brown);color:var(--amber-light);border:none;padding:0.65rem 1.6rem;border-radius:50px;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s;width:100%;margin-top:0.3rem;}
+.save-btn:hover{background:var(--brown-mid);}
+.save-btn.amber{background:var(--amber);color:var(--brown);}
+.save-btn.amber:hover{background:var(--amber-dark);}
+.del-btn{background:none;border:1px solid #fca5a5;color:#991b1b;padding:0.3rem 0.8rem;border-radius:50px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.del-btn:hover{background:#fee2e2;}
+.success-toast{display:none;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;padding:0.6rem 1rem;border-radius:8px;font-size:0.84rem;margin-bottom:1rem;font-weight:500;}
+.event-item{background:var(--cream);border:1px solid rgba(196,125,0,0.18);border-radius:10px;padding:0.9rem 1rem;margin-bottom:0.7rem;display:flex;align-items:flex-start;justify-content:space-between;gap:0.8rem;}
+.event-item-info h4{font-size:0.88rem;font-weight:600;color:var(--brown);margin-bottom:0.2rem;}
+.event-item-info p{font-size:0.78rem;color:var(--muted);}
+.drink-item{background:var(--cream);border:1px solid rgba(196,125,0,0.18);border-radius:10px;padding:0.8rem 1rem;margin-bottom:0.6rem;display:flex;align-items:center;justify-content:space-between;gap:0.8rem;}
+.drink-item-info{flex:1;}
+.drink-item-info h4{font-size:0.88rem;font-weight:600;color:var(--brown);}
+.drink-item-info p{font-size:0.75rem;color:var(--muted);}
+.drink-price{font-size:0.95rem;font-weight:700;color:var(--amber-dark);font-family:'Playfair Display',serif;white-space:nowrap;}
+.status-toggle{display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;}
+.st-btn{padding:0.2rem 0.6rem;border-radius:50px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.st-open{background:#d1fae5;color:#065f46;border-color:#6ee7b7;}
+.st-sold{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.st-upcoming{background:var(--amber-light);color:var(--brown-mid);border-color:rgba(196,125,0,0.3);}
+.section-label{font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;display:block;}
+/* OWNER LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:60vh;padding:2rem;}
+.login-card{background:var(--white);border:1px solid rgba(196,125,0,0.2);border-radius:20px;padding:2.5rem;max-width:380px;width:100%;text-align:center;}
+.login-card h2{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--brown);margin-bottom:0.5rem;}
+.login-card p{color:var(--muted);font-size:0.88rem;margin-bottom:1.5rem;}
+.login-error{color:#991b1b;font-size:0.82rem;margin-top:0.5rem;display:none;}
+/* CUSTOMER */
+#customer-page{font-family:'DM Sans',sans-serif;}
+.c-nav{background:rgba(251,246,238,0.97);padding:1rem 2.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(196,125,0,0.15);position:sticky;top:56px;z-index:10;}
+.c-nav .logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--brown);}
+.c-nav-links{display:flex;gap:1.5rem;list-style:none;}
+.c-nav-links a{text-decoration:none;color:var(--muted);font-size:0.82rem;transition:color 0.2s;}
+.c-nav-links a:hover{color:var(--amber-dark);}
+.c-order-btn{background:var(--brown);color:var(--amber-light);padding:0.45rem 1.2rem;border-radius:50px;font-size:0.82rem;font-weight:500;text-decoration:none;white-space:nowrap;}
+.c-hero{background:var(--cream);text-align:center;padding:5rem 2rem 3.5rem;position:relative;overflow:hidden;}
+.c-hero-bubble{position:absolute;border-radius:50%;background:var(--amber);opacity:0.07;}
+.c-hero-bubble.b1{width:500px;height:500px;top:-120px;left:-100px;}
+.c-hero-bubble.b2{width:320px;height:320px;bottom:-80px;right:-80px;}
+.c-hero-tag{display:inline-block;background:var(--amber-light);color:var(--brown-mid);padding:0.3rem 1rem;border-radius:50px;font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1rem;border:1px solid rgba(196,125,0,0.3);}
+.c-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:900;color:var(--brown);margin-bottom:0.8rem;line-height:1.05;position:relative;}
+.c-hero h1 span{color:var(--amber-dark);}
+.c-hero p{color:var(--muted);max-width:440px;margin:0 auto 2rem;font-size:0.95rem;line-height:1.7;position:relative;}
+.c-hero-btns{display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;position:relative;}
+.c-btn-primary{background:var(--brown);color:var(--amber-light);padding:0.8rem 2.2rem;border-radius:50px;font-size:0.92rem;font-weight:500;text-decoration:none;border:2px solid var(--brown);transition:all 0.2s;}
+.c-btn-primary:hover{background:var(--brown-mid);}
+.c-btn-outline{background:transparent;color:var(--brown);padding:0.8rem 2.2rem;border-radius:50px;font-size:0.92rem;font-weight:500;text-decoration:none;border:2px solid var(--brown);transition:all 0.2s;}
+.c-btn-outline:hover{background:var(--brown);color:var(--amber-light);}
+.c-hero-cup{margin-top:3rem;display:inline-block;animation:float 4s ease-in-out infinite;position:relative;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.c-splash{width:180px;height:100px;background:var(--amber);border-radius:60% 40% 60% 40%;position:absolute;top:5px;left:50%;transform:translateX(-50%);opacity:0.2;}
+.c-section{padding:4rem 2rem;}
+.c-section.white{background:var(--white);}
+.c-section.dark{background:var(--brown);}
+.c-inner{max-width:900px;margin:0 auto;}
+.c-section-tag{display:inline-block;background:var(--amber-light);color:var(--brown-mid);padding:0.25rem 0.9rem;border-radius:50px;font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem;border:1px solid rgba(196,125,0,0.3);}
+.c-section.dark .c-section-tag{background:rgba(240,165,0,0.2);color:var(--amber);border-color:rgba(240,165,0,0.3);}
+.c-title{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--brown);margin-bottom:0.4rem;}
+.c-section.dark .c-title{color:var(--amber-light);}
+.c-sub{color:var(--muted);font-size:0.92rem;margin-bottom:2rem;}
+.c-section.dark .c-sub{color:rgba(255,255,255,0.5);}
+.c-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+.c-step{background:var(--white);border:1px solid rgba(196,125,0,0.18);border-radius:16px;padding:1.5rem 1rem;text-align:center;}
+.c-step-num{width:38px;height:38px;background:var(--amber);color:var(--brown);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin:0 auto 0.8rem;}
+.c-step h3{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;color:var(--brown);margin-bottom:0.4rem;}
+.c-step p{font-size:0.78rem;color:var(--muted);line-height:1.5;}
+.c-menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.2rem;}
+.c-menu-card{background:var(--cream);border:1px solid rgba(196,125,0,0.2);border-radius:16px;padding:1.5rem 1.2rem;transition:all 0.2s;text-align:left;}
+.c-menu-card:hover{transform:translateY(-3px);border-color:var(--amber);}
+.c-drink-badge{display:inline-block;background:var(--amber-light);color:var(--brown-mid);padding:0.2rem 0.6rem;border-radius:50px;font-size:0.65rem;font-weight:600;margin-bottom:0.8rem;border:1px solid rgba(196,125,0,0.3);}
+.c-menu-card h3{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--brown);margin-bottom:0.3rem;line-height:1.3;}
+.c-menu-card p{font-size:0.78rem;color:var(--muted);line-height:1.5;margin-bottom:0.9rem;}
+.c-menu-price{font-size:1.1rem;font-weight:700;color:var(--amber-dark);font-family:'Playfair Display',serif;}
+.c-events-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;}
+.c-event-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:1.5rem;transition:all 0.2s;text-align:left;}
+.c-event-card:hover{background:rgba(255,255,255,0.11);border-color:var(--amber);}
+.c-event-date{display:inline-block;background:var(--amber);color:var(--brown);padding:0.25rem 0.8rem;border-radius:50px;font-size:0.7rem;font-weight:700;margin-bottom:0.6rem;}
+.c-event-card h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--amber-light);margin-bottom:0.4rem;}
+.c-event-card p{font-size:0.8rem;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:0.8rem;}
+.c-event-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
+.c-event-tag{background:rgba(240,165,0,0.15);color:var(--amber);font-size:0.68rem;padding:0.15rem 0.55rem;border-radius:50px;border:1px solid rgba(240,165,0,0.25);}
+.c-order-section{background:var(--amber);padding:4rem 2rem;text-align:center;}
+.c-order-inner{max-width:580px;margin:0 auto;}
+.c-order-section h2{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:900;color:var(--brown);margin-bottom:0.8rem;}
+.c-order-section p{color:var(--brown-mid);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem;}
+.c-order-perks{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem;}
+.c-perk{display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--brown-mid);}
+.c-perk-dot{width:7px;height:7px;border-radius:50%;background:var(--brown);flex-shrink:0;}
+.c-big-btn{background:var(--brown);color:var(--amber-light);padding:0.9rem 2.5rem;border-radius:50px;font-size:1rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;transition:all 0.2s;border:2px solid var(--brown);}
+.c-big-btn:hover{background:var(--brown-mid);}
+.c-footer{background:var(--brown);color:rgba(255,255,255,0.55);padding:2.5rem;text-align:center;}
+.c-footer .logo{font-family:'Playfair Display',serif;color:var(--amber);font-size:1.3rem;margin-bottom:0.5rem;}
+.c-footer p{font-size:0.82rem;line-height:1.6;}
+.c-footer a{color:var(--amber);text-decoration:none;}
+@media(max-width:700px){
+  .panel-grid{grid-template-columns:1fr;}
+  .panel-card.full{grid-column:span 1;}
+  .c-steps{grid-template-columns:1fr 1fr;}
+  .c-nav-links{display:none;}
+  .c-nav{padding:1rem 1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- MODE BAR (owner only — hide this in production by removing the bar and always showing customer page) -->
+<div id="mode-bar">
+  <div class="logo">Cutting & Co.</div>
+  <div class="mode-btns">
+    <button class="mode-btn" id="btn-customer" onclick="showMode('customer')">Customer View</button>
+    <button class="mode-btn active" id="btn-owner" onclick="showMode('owner')">Owner Dashboard</button>
+  </div>
+</div>
+
+<!-- OWNER LOGIN + PANEL -->
+<div id="owner-area">
+  <div id="login-screen">
+    <div class="login-card">
+      <h2>Owner Login</h2>
+      <p>Enter your password to access the dashboard.</p>
+      <label>Password</label>
+      <input type="password" id="login-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="save-btn amber" onclick="doLogin()" style="margin-top:0.5rem;">Login</button>
+      <p class="login-error" id="login-error">Incorrect password. Try again.</p>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:1rem;">Default password: <strong>cuttingco2025</strong><br>Change it in the HTML file (OWNER_PASSWORD variable).</p>
+    </div>
+  </div>
+
+  <div id="owner-panel" class="hidden">
+    <div class="owner-header">
+      <h1>Owner Dashboard</h1>
+      <p>Manage your menu, café dates, and site settings. Changes appear live on the customer page instantly. <button onclick="doLogout()" style="background:none;border:none;color:var(--muted);font-size:0.82rem;cursor:pointer;text-decoration:underline;">Logout</button></p>
+    </div>
+    <div id="owner-toast" class="success-toast">Changes saved!</div>
+    <div class="panel-grid">
+
+      <div class="panel-card">
+        <h2>Menu Drinks</h2>
+        <div id="drinks-list"></div>
+        <div style="border-top:1px solid rgba(196,125,0,0.15);padding-top:1rem;margin-top:0.5rem;">
+          <span class="section-label">Add a new drink</span>
+          <label>Drink name</label>
+          <input type="text" id="new-drink-name" placeholder="e.g. Lavender Latte">
+          <label>Description</label>
+          <textarea id="new-drink-desc" placeholder="What makes it special?"></textarea>
+          <div class="field-row">
+            <div><label>Price ($)</label><input type="number" id="new-drink-price" placeholder="4.50" step="0.5" min="0"></div>
+            <div><label>Badge</label><input type="text" id="new-drink-badge" placeholder="Cold, Hot, Special..."></div>
+          </div>
+          <button class="save-btn amber" onclick="addDrink()">+ Add Drink</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h2>Café Dates</h2>
+        <div id="events-list"></div>
+        <div style="border-top:1px solid rgba(196,125,0,0.15);padding-top:1rem;margin-top:0.5rem;">
+          <span class="section-label">Add a new date</span>
+          <label>Event name</label>
+          <input type="text" id="new-event-name" placeholder="e.g. Matcha Morning">
+          <div class="field-row">
+            <div><label>Date</label><input type="date" id="new-event-date"></div>
+            <div><label>Time</label><input type="text" id="new-event-time" placeholder="11am – 3pm"></div>
+          </div>
+          <label>Description</label>
+          <textarea id="new-event-desc" placeholder="What's special about this day?"></textarea>
+          <label>Featured drinks (comma-separated)</label>
+          <input type="text" id="new-event-drinks" placeholder="Full Menu, Seasonal Special">
+          <label>Status</label>
+          <select id="new-event-status">
+            <option value="upcoming">Upcoming</option>
+            <option value="open">Open for orders</option>
+            <option value="sold-out">Sold out</option>
+          </select>
+          <button class="save-btn amber" onclick="addEvent()">+ Add Date</button>
+        </div>
+      </div>
+
+      <div class="panel-card full">
+        <h2>Site Settings</h2>
+        <div class="field-row">
+          <div>
+            <label>Address (shown on customer page)</label>
+            <input type="text" id="setting-address" placeholder="123 Cozy Lane, Your City">
+            <label>Hours</label>
+            <input type="text" id="setting-hours" placeholder="Check café dates for times">
+          </div>
+          <div>
+            <label>Google Form link</label>
+            <input type="text" id="setting-form" placeholder="https://forms.gle/...">
+            <label>Instagram handle</label>
+            <input type="text" id="setting-instagram" placeholder="@cuttingnco">
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveSettings()" style="max-width:200px;">Save Settings</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER PAGE -->
+<div id="customer-page" class="hidden">
+  <nav class="c-nav">
+    <div class="logo">Cutting & Co.</div>
+    <ul class="c-nav-links">
+      <li><a href="#c-how">How It Works</a></li>
+      <li><a href="#c-menu">Menu</a></li>
+      <li><a href="#c-events">Café Dates</a></li>
+      <li><a href="#c-order">Order Now</a></li>
+    </ul>
+    <a href="#c-order" class="c-order-btn">Place Order</a>
+  </nav>
+
+  <section class="c-hero">
+    <div class="c-hero-bubble b1"></div>
+    <div class="c-hero-bubble b2"></div>
+    <div class="c-hero-tag">Curbside Pickup · Home Café</div>
+    <h1>Your favourite drinks,<br><span>delivered to your car</span></h1>
+    <p>Order ahead, pull up to our address, and we'll bring your handcrafted drink right to you. That easy.</p>
+    <div class="c-hero-btns">
+      <a href="#c-order" class="c-btn-primary">Place an Order</a>
+      <a href="#c-menu" class="c-btn-outline">See the Menu</a>
+    </div>
+    <div class="c-hero-cup">
+      <div class="c-splash"></div>
+      <svg width="160" height="110" viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:2;">
+        <rect x="12" y="40" width="52" height="60" rx="6" fill="#C9834A"/>
+        <rect x="12" y="40" width="52" height="12" rx="3" fill="#fff" opacity="0.6"/>
+        <rect x="18" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <rect x="30" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <rect x="42" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <rect x="96" y="40" width="52" height="60" rx="6" fill="#C9834A"/>
+        <rect x="96" y="40" width="52" height="12" rx="3" fill="#fff" opacity="0.6"/>
+        <rect x="102" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <rect x="114" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <rect x="126" y="56" width="8" height="36" rx="2" fill="#7A3B10" opacity="0.4"/>
+        <path d="M72 36 Q76 18 80 10 Q84 18 88 36" stroke="#F0A500" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="68" cy="28" r="3" fill="#F0A500" opacity="0.7"/>
+        <circle cx="92" cy="22" r="2" fill="#F0A500" opacity="0.7"/>
+        <circle cx="80" cy="8" r="2.5" fill="#F0A500"/>
+      </svg>
+    </div>
+  </section>
+
+  <div style="background:var(--brown);overflow:hidden;line-height:0;">
+    <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="50"><path d="M0,60 C360,0 1080,0 1440,60 L1440,0 L0,0 Z" fill="#FBF6EE"/></svg>
+  </div>
+
+  <section style="background:var(--brown);padding:4rem 2rem;display:flex;align-items:center;justify-content:center;">
+    <div style="max-width:860px;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;width:100%;">
+      <div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--amber-light);margin-bottom:1rem;line-height:1.2;">Brewed with <span style="color:var(--amber);">passion</span>, delivered with love</h2>
+        <p style="font-size:0.95rem;line-height:1.8;color:rgba(255,255,255,0.7);margin-bottom:0.8rem;">Cutting & Co. is a home café built on the belief that the best drinks come from the heart. We make everything fresh to order — no shortcuts, no premixes.</p>
+        <p style="font-size:0.95rem;line-height:1.8;color:rgba(255,255,255,0.7);">We're a curbside pickup experience: order ahead, arrive at our address, and we bring your drink straight to your car.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.3rem;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--amber);">4</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.3rem;">Signature Drinks</div></div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.3rem;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--amber);">100%</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.3rem;">Made Fresh</div></div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.3rem;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--amber);">0</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.3rem;">Shortcuts Taken</div></div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.3rem;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--amber);">&#8734;</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.3rem;">Good Vibes</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="background:var(--cream);overflow:hidden;line-height:0;">
+    <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="50"><path d="M0,0 C360,60 1080,60 1440,0 L1440,60 L0,60 Z" fill="#3B1C08"/></svg>
+  </div>
+
+  <section class="c-section white" id="c-how" style="text-align:center;">
+    <div class="c-inner">
+      <div class="c-section-tag">Curbside Pickup</div>
+      <div class="c-title">How it works</div>
+      <div class="c-sub">Four simple steps to your perfect drink.</div>
+      <div class="c-steps">
+        <div class="c-step"><div class="c-step-num">1</div><h3>Check the dates</h3><p>See our upcoming café dates and drinks available that day.</p></div>
+        <div class="c-step"><div class="c-step-num">2</div><h3>Place your order</h3><p>Fill out our quick form — drink, pickup time, car, and allergies.</p></div>
+        <div class="c-step"><div class="c-step-num">3</div><h3>Drive on over</h3><p>Head to our address at your chosen pickup time. We'll be ready!</p></div>
+        <div class="c-step"><div class="c-step-num">4</div><h3>We bring it out</h3><p>Stay in your car — we'll bring your drink right to your window.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="c-section" id="c-menu" style="background:var(--cream);text-align:center;">
+    <div class="c-inner">
+      <div class="c-section-tag">Our Drinks</div>
+      <div class="c-title">The Menu</div>
+      <div class="c-sub">Handcrafted, made to order, always fresh.</div>
+      <div class="c-menu-grid" id="customer-menu"></div>
+    </div>
+  </section>
+
+  <section class="c-section dark" id="c-events" style="text-align:center;">
+    <div class="c-inner">
+      <div class="c-section-tag">Upcoming</div>
+      <div class="c-title">Café Dates</div>
+      <div class="c-sub">We pop up on select days — check back for the latest schedule.</div>
+      <div class="c-events-grid" id="customer-events"></div>
+      <p style="color:rgba(255,255,255,0.35);font-size:0.8rem;margin-top:1.5rem;">Follow <a id="c-insta-link" href="https://www.instagram.com/cuttingnco" target="_blank" style="color:var(--amber);text-decoration:none;">@cuttingnco</a> for real-time updates.</p>
+    </div>
+  </section>
+
+  <section class="c-order-section" id="c-order">
+    <div class="c-order-inner">
+      <div class="c-section-tag" style="background:rgba(58,28,8,0.12);color:var(--brown);border-color:rgba(58,28,8,0.2);">Ready to order?</div>
+      <h2>Place your curbside order</h2>
+      <p>Let us know what you'd like, your pickup time, your car description, and any allergies or special requests. We'll have it ready when you arrive.</p>
+      <div class="c-order-perks">
+        <div class="c-perk"><div class="c-perk-dot"></div><span>Made fresh to order</span></div>
+        <div class="c-perk"><div class="c-perk-dot"></div><span>Delivered to your car</span></div>
+        <div class="c-perk"><div class="c-perk-dot"></div><span>Allergy-friendly</span></div>
+      </div>
+      <a id="c-order-btn" href="https://forms.gle/3FCJUAKU2pvbMzAj9" target="_blank" class="c-big-btn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Place My Order
+      </a>
+      <p style="margin-top:1rem;font-size:0.82rem;color:var(--brown-mid);">You'll hear from us via Instagram DM once your order is received.</p>
+    </div>
+  </section>
+
+  <section class="c-section white" id="c-visit">
+    <div class="c-inner" style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+      <div>
+        <div class="c-section-tag">Find Us</div>
+        <div class="c-title" style="margin-bottom:1.2rem;">Come find your cup of happiness</div>
+        <div style="display:flex;align-items:flex-start;gap:0.8rem;margin-bottom:1rem;">
+          <div style="width:34px;height:34px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">&#128205;</div>
+          <div><strong style="display:block;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brown);margin-bottom:0.2rem;">Address</strong><span id="c-address" style="font-size:0.9rem;color:var(--muted);">DM us on Instagram for our address!</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:0.8rem;margin-bottom:1rem;">
+          <div style="width:34px;height:34px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">&#128336;</div>
+          <div><strong style="display:block;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brown);margin-bottom:0.2rem;">Hours</strong><span id="c-hours" style="font-size:0.9rem;color:var(--muted);">Check our café dates for current pop-up times</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:0.8rem;">
+          <div style="width:34px;height:34px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">&#128247;</div>
+          <div><strong style="display:block;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brown);margin-bottom:0.2rem;">Instagram</strong><a id="c-insta" href="https://www.instagram.com/cuttingnco" target="_blank" style="font-size:0.9rem;color:var(--amber-dark);font-weight:600;text-decoration:none;">@cuttingnco</a></div>
+        </div>
+      </div>
+      <div style="background:var(--cream);border-radius:16px;height:240px;display:flex;align-items:center;justify-content:center;border:2px dashed rgba(196,125,0,0.3);">
+        <!-- REPLACE this div with your Google Maps iframe embed -->
+        <p style="color:var(--muted);font-size:0.85rem;text-align:center;line-height:1.8;">&#128205; Paste your Google Maps<br>embed code here</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="c-footer">
+    <div class="logo">Cutting & Co.</div>
+    <p>Handcrafted with love &middot; <a href="https://www.instagram.com/cuttingnco" target="_blank">@cuttingnco</a></p>
+    <p style="margin-top:0.3rem;font-size:0.72rem;">&copy; 2025 Cutting & Co. &middot; All rights reserved</p>
+  </div>
+</div>
+
+<script>
+// ========== CHANGE YOUR PASSWORD HERE ==========
+const OWNER_PASSWORD = 'cuttingco2025';
+// ================================================
+
+const STORAGE_KEYS = {drinks:'cnc_drinks',events:'cnc_events',settings:'cnc_settings',auth:'cnc_auth'};
+
+const DEFAULT_DRINKS = [
+  {id:1,name:'Jasmine Tea w/ Matcha Cold Foam',desc:'Delicate floral jasmine tea crowned with a silky, earthy matcha cold foam. Light and refreshing.',price:'4.50',badge:'Cold'},
+  {id:2,name:'Mango Lassi Matcha',desc:'Creamy mango lassi blended with ceremonial matcha. Tropical, vibrant, and utterly unique.',price:'5.50',badge:'Cold'},
+  {id:3,name:'Salted Orange Cold Brew',desc:'Bold cold brew with a bright citrus orange twist and a hint of salt to balance it all out.',price:'4.50',badge:'Cold Brew'},
+  {id:4,name:'Matcha w/ Jamun Cold Foam',desc:'Smooth ceremonial matcha topped with a stunning jamun berry cold foam.',price:'5.50',badge:'Cold'},
+];
+
+const DEFAULT_EVENTS = [
+  {id:1,name:'Spring Pop-Up',date:'2025-04-26',time:'11am – 3pm',desc:'Our spring opener! Full menu available plus a limited seasonal special.',drinks:'Full Menu, Seasonal Special',status:'open'},
+  {id:2,name:'Matcha Morning',date:'2025-05-03',time:'10am – 2pm',desc:'A matcha-focused day — both matcha drinks on special, plus a surprise foam flavour.',drinks:'Jasmine Matcha, Jamun Matcha, Surprise Foam',status:'upcoming'},
+  {id:3,name:'Cold Brew Day',date:'2025-05-10',time:'12pm – 4pm',desc:'All things cold brew — featuring the Salted Orange and a rotating guest brew.',drinks:'Salted Orange Brew, Guest Brew',status:'sold-out'},
+];
+
+const DEFAULT_SETTINGS = {address:'',hours:'',form:'https://forms.gle/3FCJUAKU2pvbMzAj9',instagram:'@cuttingnco'};
+
+let drinks=[], events=[], settings={}, isLoggedIn=false;
+
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+function init(){
+  drinks=lsGet(STORAGE_KEYS.drinks,DEFAULT_DRINKS);
+  events=lsGet(STORAGE_KEYS.events,DEFAULT_EVENTS);
+  settings=lsGet(STORAGE_KEYS.settings,DEFAULT_SETTINGS);
+  isLoggedIn=sessionStorage.getItem(STORAGE_KEYS.auth)==='1';
+  renderCustomerMenu(); renderCustomerEvents(); applySettings();
+  if(isLoggedIn){showOwnerPanel();}
+  // Default to customer view if URL has ?view=customer
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('view')==='customer'||!isLoggedIn){showMode('customer');}
+}
+
+function doLogin(){
+  const pw=document.getElementById('login-pw').value;
+  if(pw===OWNER_PASSWORD){
+    sessionStorage.setItem(STORAGE_KEYS.auth,'1');
+    isLoggedIn=true;
+    showOwnerPanel();
+    document.getElementById('login-error').style.display='none';
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem(STORAGE_KEYS.auth);
+  isLoggedIn=false;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('owner-panel').classList.add('hidden');
+  document.getElementById('login-pw').value='';
+}
+
+function showOwnerPanel(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('owner-panel').classList.remove('hidden');
+  renderOwnerDrinks(); renderOwnerEvents(); loadSettings();
+}
+
+function showMode(mode){
+  document.getElementById('owner-area').classList.toggle('hidden',mode!=='owner');
+  document.getElementById('customer-page').classList.toggle('hidden',mode!=='customer');
+  document.getElementById('btn-owner').classList.toggle('active',mode==='owner');
+  document.getElementById('btn-customer').classList.toggle('active',mode==='customer');
+}
+
+function renderOwnerDrinks(){
+  document.getElementById('drinks-list').innerHTML=drinks.map(d=>`
+    <div class="drink-item">
+      <div class="drink-item-info"><h4>${d.name}</h4><p>${d.badge} · ${d.desc.substring(0,50)}...</p></div>
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <span class="drink-price">$${d.price}</span>
+        <button class="del-btn" onclick="deleteDrink(${d.id})">Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderOwnerEvents(){
+  document.getElementById('events-list').innerHTML=events.map(e=>`
+    <div class="event-item">
+      <div class="event-item-info">
+        <h4>${e.name}</h4>
+        <p>${formatDate(e.date)} &middot; ${e.time}</p>
+        <div class="status-toggle">
+          <button class="st-btn st-open" onclick="setEventStatus(${e.id},'open')">Open</button>
+          <button class="st-btn st-upcoming" onclick="setEventStatus(${e.id},'upcoming')">Upcoming</button>
+          <button class="st-btn st-sold" onclick="setEventStatus(${e.id},'sold-out')">Sold out</button>
+        </div>
+      </div>
+      <button class="del-btn" onclick="deleteEvent(${e.id})">Remove</button>
+    </div>`).join('');
+}
+
+function renderCustomerMenu(){
+  const el=document.getElementById('customer-menu');
+  if(!drinks.length){el.innerHTML='<p style="color:var(--muted);padding:2rem;grid-column:span 4;text-align:center;">Menu coming soon — follow us on Instagram for updates!</p>';return;}
+  el.innerHTML=drinks.map(d=>`
+    <div class="c-menu-card">
+      <div class="c-drink-badge">${d.badge}</div>
+      <h3>${d.name}</h3>
+      <p>${d.desc}</p>
+      <div class="c-menu-price">$${parseFloat(d.price).toFixed(2)}</div>
+    </div>`).join('');
+}
+
+function renderCustomerEvents(){
+  const el=document.getElementById('customer-events');
+  if(!events.length){el.innerHTML='<p style="color:rgba(255,255,255,0.4);padding:2rem;text-align:center;">No upcoming dates yet — follow us on Instagram for announcements!</p>';return;}
+  el.innerHTML=events.map(e=>`
+    <div class="c-event-card">
+      <div class="c-event-date">${formatDate(e.date)} &middot; ${e.time}</div>
+      <span class="tag ${e.status}" style="display:inline-block;margin-bottom:0.6rem;">${e.status==='open'?'Open for orders':e.status==='sold-out'?'Sold out':'Upcoming'}</span>
+      <h3>${e.name}</h3>
+      <p>${e.desc}</p>
+      <div class="c-event-tags">${e.drinks.split(',').map(d=>`<span class="c-event-tag">${d.trim()}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function applySettings(){
+  if(settings.address) document.getElementById('c-address').textContent=settings.address;
+  if(settings.hours) document.getElementById('c-hours').textContent=settings.hours;
+  if(settings.form) document.getElementById('c-order-btn').href=settings.form;
+  if(settings.instagram){
+    const h=settings.instagram.replace('@','');
+    document.getElementById('c-insta').textContent=settings.instagram;
+    document.getElementById('c-insta').href=`https://www.instagram.com/${h}`;
+    document.getElementById('c-insta-link').textContent=settings.instagram;
+    document.getElementById('c-insta-link').href=`https://www.instagram.com/${h}`;
+  }
+}
+
+function loadSettings(){
+  document.getElementById('setting-address').value=settings.address||'';
+  document.getElementById('setting-hours').value=settings.hours||'';
+  document.getElementById('setting-form').value=settings.form||'https://forms.gle/3FCJUAKU2pvbMzAj9';
+  document.getElementById('setting-instagram').value=settings.instagram||'@cuttingnco';
+}
+
+function saveSettings(){
+  settings={
+    address:document.getElementById('setting-address').value,
+    hours:document.getElementById('setting-hours').value,
+    form:document.getElementById('setting-form').value,
+    instagram:document.getElementById('setting-instagram').value,
+  };
+  lsSet(STORAGE_KEYS.settings,settings);
+  applySettings(); showToast();
+}
+
+function addDrink(){
+  const name=document.getElementById('new-drink-name').value.trim();
+  const desc=document.getElementById('new-drink-desc').value.trim();
+  const price=document.getElementById('new-drink-price').value;
+  const badge=document.getElementById('new-drink-badge').value.trim()||'Drink';
+  if(!name||!price){alert('Please enter a drink name and price.');return;}
+  drinks.push({id:Date.now(),name,desc,price:parseFloat(price).toFixed(2),badge});
+  lsSet(STORAGE_KEYS.drinks,drinks);
+  document.getElementById('new-drink-name').value='';
+  document.getElementById('new-drink-desc').value='';
+  document.getElementById('new-drink-price').value='';
+  document.getElementById('new-drink-badge').value='';
+  renderOwnerDrinks(); renderCustomerMenu(); showToast();
+}
+
+function deleteDrink(id){
+  drinks=drinks.filter(d=>d.id!==id);
+  lsSet(STORAGE_KEYS.drinks,drinks);
+  renderOwnerDrinks(); renderCustomerMenu(); showToast();
+}
+
+function addEvent(){
+  const name=document.getElementById('new-event-name').value.trim();
+  const date=document.getElementById('new-event-date').value;
+  const time=document.getElementById('new-event-time').value.trim();
+  const desc=document.getElementById('new-event-desc').value.trim();
+  const drnks=document.getElementById('new-event-drinks').value.trim();
+  const status=document.getElementById('new-event-status').value;
+  if(!name||!date){alert('Please enter a name and date.');return;}
+  events.push({id:Date.now(),name,date,time:time||'TBD',desc,drinks:drnks||'Full Menu',status});
+  lsSet(STORAGE_KEYS.events,events);
+  document.getElementById('new-event-name').value='';
+  document.getElementById('new-event-date').value='';
+  document.getElementById('new-event-time').value='';
+  document.getElementById('new-event-desc').value='';
+  document.getElementById('new-event-drinks').value='';
+  renderOwnerEvents(); renderCustomerEvents(); showToast();
+}
+
+function deleteEvent(id){
+  events=events.filter(e=>e.id!==id);
+  lsSet(STORAGE_KEYS.events,events);
+  renderOwnerEvents(); renderCustomerEvents(); showToast();
+}
+
+function setEventStatus(id,status){
+  events=events.map(e=>e.id===id?{...e,status}:e);
+  lsSet(STORAGE_KEYS.events,events);
+  renderOwnerEvents(); renderCustomerEvents(); showToast();
+}
+
+function formatDate(d){
+  if(!d) return '';
+  try{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+  catch(e){return d;}
+}
+
+function showToast(){
+  const t=document.getElementById('owner-toast');
+  t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},2500);
+}
+
+document.querySelectorAll('#customer-page a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    const t=document.querySelector(this.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth'});
+  });
+});
+
+init();
+</script>
+</body>
+</html>
